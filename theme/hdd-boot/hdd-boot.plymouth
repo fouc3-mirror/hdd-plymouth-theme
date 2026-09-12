@@ -1,0 +1,12 @@
+[Plymouth Theme]
+Name=HDD Boot
+Description=HDD 开机动画 + 启动日志浮层（script 插件）
+
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/hdd-boot/frames
+ScriptFile=/usr/share/plymouth/themes/hdd-boot/hdd-boot.script
+MonospaceFont=monospace 12
+ConsoleLogBackgroundColor=0x00000000
+ConsoleLogTextColor=0x00d0d0d0

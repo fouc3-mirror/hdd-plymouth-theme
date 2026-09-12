@@ -1,0 +1,50 @@
+# =====================================================================
+#  stub.script — 测试桩: 用脚本模拟 plymouth script 插件原生对象
+#  (Image / Sprite / Window / Plymouth / Math)
+#  仅用于离线验证 hdd-boot.script 的运行逻辑, 不参与真机启动
+# =====================================================================
+
+fps_stub     = 0;
+stub_refresh = NULL;
+stub_key     = NULL;
+stub_progress= NULL;
+stub_message = NULL;
+stub_status  = NULL;
+stub_quit    = NULL;
+stub_last_image = NULL;
+
+Plymouth = [];
+Plymouth.SetRefreshRate           = fun (v) { global.fps_stub = v; return 0; };
+Plymouth.SetRefreshFunction       = fun (f) { global.stub_refresh = f; return 0; };
+Plymouth.SetKeyboardInputFunction = fun (f) { global.stub_key = f; return 0; };
+Plymouth.SetBootProgressFunction  = fun (f) { global.stub_progress = f; return 0; };
+Plymouth.SetDisplayMessageFunction= fun (f) { global.stub_message = f; return 0; };
+Plymouth.SetUpdateStatusFunction  = fun (f) { global.stub_status = f; return 0; };
+Plymouth.SetQuitFunction          = fun (f) { global.stub_quit = f; return 0; };
+
+Window = [];
+Window.GetWidth  = fun () { return 1280; };
+Window.GetHeight = fun () { return 720; };
+Window.SetBackgroundTopColor    = fun (r, g, b) { return 0; };
+Window.SetBackgroundBottomColor = fun (r, g, b) { return 0; };
+
+Math = [];
+Math.Int = fun (v) { return v; };
+
+stub_image = [];
+stub_image.Scale     = fun (w, h) { return this; };
+stub_image.GetWidth  = fun () { return 1280; };
+stub_image.GetHeight = fun () { return 720; };
+
+Image = [];
+Image.Text = fun (text, r, g, b, a, font, align) { global.stub_last_text = text; return stub_image; };
+Image |= fun (filename) { global.stub_last_filename = filename; return stub_image; };
+
+stub_sprite = [];
+stub_sprite.SetImage    = fun (img) { global.stub_last_image = img; return 0; };
+stub_sprite.SetPosition = fun (x, y, z) { return 0; };
+stub_sprite.SetZ        = fun (z) { return 0; };
+stub_sprite.SetOpacity  = fun (o) { return 0; };
+
+Sprite = [];
+Sprite |= fun (image) { return stub_sprite; };

@@ -1,0 +1,226 @@
+# =====================================================================
+#  hdd-boot.script — HDD 开机动画 Plymouth 主题
+#  适用: plymouth >= 24 (script 插件新版 API), Arch Linux
+#
+#  行为:
+#    1. 背景: 播放 PNG 帧序列动画 (ANIM_FPS 帧/秒), 只播放一轮
+#    2. 上层: 半透明日志条 + 启动日志文字 (Plymouth 消息流)
+#    3. 退出规则:
+#         (a) 动画播放完一轮 (或固定时长) 才允许退出
+#         (b) 检测到按键 -> 立即允许退出, 前提是系统启动已完成
+#    4. 若动画已播完但仍处于启动流程 -> 保持最后一帧 (不循环)
+#
+#  注: plymouth 26 的 script 语言没有 GetBootLog();
+#      启动日志改由 Plymouth.SetDisplayMessageFunction +
+#      Plymouth.SetUpdateStatusFunction 接收的消息流渲染, 详见 README.md
+# =====================================================================
+
+# ---------------------------- 配置 ----------------------------
+ANIM_FPS      = 20;              # 与 extract-frames.sh 的 fps 一致
+TOTAL_FRAMES  = 181;             # frame-0001.png ... frame-0181.png
+SCALE_BG      = 1;               # 1 = 每帧缩放到当前窗口大小
+HOLD_LAST     = 1;               # 1 = 播完一轮后保持最后一帧
+LOG_VISIBLE   = 1;               # 1 = 显示启动日志浮层
+LOG_MAX_LINES = 8;               # 日志浮层保留的行数
+LOG_FONT      = "monospace 12";  # 日志字体 (需 initramfs 内有字体, 见 README)
+LOG_BAR_RATIO = 0.35;            # 日志条高度占屏幕高度的比例
+
+# ---------------------------- 状态 ----------------------------
+anim = [];
+anim.index         = 0;   # 当前帧下标
+anim.done          = 0;   # 一轮是否已播完
+anim.key_pressed   = 0;   # 是否检测到按键
+anim.boot_complete = 0;   # 系统启动是否完成
+anim.exit_allowed  = 0;   # 是否允许退出
+
+log = [];
+log.count = 0;            # 日志行数 (最多 LOG_MAX_LINES)
+log.buf   = [];           # 滚动行缓冲 log.buf[0 .. LOG_MAX_LINES-1]
+
+# ------------------------- 工具函数 -------------------------
+fun pad4(n)
+{
+  if (n < 10)   { return "000" + n; }
+  if (n < 100)  { return "00"  + n; }
+  if (n < 1000) { return "0"   + n; }
+  return "" + n;
+}
+
+# 退出判定:
+#   (a) 动画播完一轮                       -> 允许退出
+#   (b) 按键 + 系统启动完成                -> 允许退出
+fun update_exit_allowed()
+{
+  if (anim.done)
+  {
+    anim.exit_allowed = 1;
+  }
+  else if (anim.key_pressed && anim.boot_complete)
+  {
+    anim.exit_allowed = 1;
+  }
+}
+
+# 把日志缓冲渲染成一张文字图
+fun log_render()
+{
+  if (!LOG_VISIBLE) { return; }
+
+  text = "";
+  i = 0;
+  while (i < log.count)
+  {
+    if (i > 0) { text = text + "\n"; }
+    text = text + log.buf[i];
+    i = i + 1;
+  }
+
+  if (!text) { return; }   # 空字符串在脚本里为假
+  log_text.SetImage(Image.Text(text, 0.82, 0.85, 0.90, 1.0, LOG_FONT, "left"));
+}
+
+# 追加一行日志 (超出后向上滚动)
+fun log_push(message)
+{
+  if (!LOG_VISIBLE) { return; }
+
+  if (log.count >= LOG_MAX_LINES)
+  {
+    i = 0;
+    while (i < LOG_MAX_LINES - 1)
+    {
+      log.buf[i] = log.buf[i + 1];
+      i = i + 1;
+    }
+    log.buf[LOG_MAX_LINES - 1] = message;
+  }
+  else
+  {
+    log.buf[log.count] = message;
+    log.count = log.count + 1;
+  }
+
+  log_render();
+}
+
+# ------------------------- 回调函数 -------------------------
+# 每一帧调用 (频率 = Plymouth.SetRefreshRate)
+fun on_refresh()
+{
+  # 一轮已播完: 保持最后一帧, 不再推进
+  if (anim.done) { return; }
+
+  if (SCALE_BG)
+  {
+    bg_sprite.SetImage(frames[anim.index].Scale(Window.GetWidth(), Window.GetHeight()));
+  }
+  else
+  {
+    bg_sprite.SetImage(frames[anim.index]);
+  }
+
+  anim.index = anim.index + 1;
+
+  if (anim.index >= TOTAL_FRAMES)
+  {
+    anim.done  = 1;
+    anim.index = TOTAL_FRAMES - 1;   # 停在最后一帧
+    update_exit_allowed();
+  }
+}
+
+# 键盘按键: 记录并重新判定退出条件
+fun on_key(key)
+{
+  anim.key_pressed = 1;
+  update_exit_allowed();
+}
+
+# 启动进度 (duration=已用时间秒, progress=0.0-1.0)
+fun on_boot_progress(duration, progress)
+{
+  if (progress >= 1.0)
+  {
+    anim.boot_complete = 1;
+    update_exit_allowed();
+  }
+}
+
+# 启动日志消息
+fun on_message(message)
+{
+  log_push(message);
+}
+
+# 状态更新 (进度文本等)
+fun on_status(status)
+{
+  log_push(status);
+}
+
+# plymouthd 通知启动流程结束 = 系统启动完成
+fun on_quit()
+{
+  anim.boot_complete = 1;
+  update_exit_allowed();
+
+  # 此时:
+  #   anim.exit_allowed == 1 -> 允许退出 (动画已播完, 或按键+启动完成)
+  #   anim.exit_allowed == 0 -> 动画未播完且无有效按键;
+  #       脚本层面保持当前画面/最后一帧不动, 不清屏.
+  #       注意: v26 的 script 插件收到 quit 后会拆除主题,
+  #       无法在脚本内真正"拦住"退出, 强制等待需配合 systemd
+  #       quit 延迟服务, 见 README.md 第 4 节.
+}
+
+# ------------------------- 加载帧序列 -------------------------
+frames = [];
+load_index = 0;
+while (load_index < TOTAL_FRAMES)
+{
+  frames[load_index] = Image("frame-" + pad4(load_index + 1) + ".png");
+  load_index = load_index + 1;
+}
+
+# ------------------------- 画面初始化 -------------------------
+Window.SetBackgroundTopColor(0, 0, 0);
+Window.SetBackgroundBottomColor(0, 0, 0);
+
+bg_sprite = Sprite();
+bg_sprite.SetPosition(0, 0, 0);
+
+# 立即显示第一帧, 避免启动瞬间黑屏
+if (SCALE_BG)
+{
+  bg_sprite.SetImage(frames[0].Scale(Window.GetWidth(), Window.GetHeight()));
+}
+else
+{
+  bg_sprite.SetImage(frames[0]);
+}
+
+if (LOG_VISIBLE)
+{
+  win_width  = Window.GetWidth();
+  win_height = Window.GetHeight();
+  bar_height = Math.Int(win_height * LOG_BAR_RATIO);
+
+  log_bg = Sprite();
+  log_bg.SetImage(Image("black.png").Scale(win_width, bar_height));
+  log_bg.SetPosition(0, 0, 1000);
+  log_bg.SetOpacity(0.55);
+
+  log_text = Sprite();
+  log_text.SetPosition(14, 8, 1001);
+
+  log_push("HDD Boot — plymouth script theme");
+}
+
+# ------------------------- 注册回调 -------------------------
+Plymouth.SetRefreshRate(ANIM_FPS);
+Plymouth.SetRefreshFunction(on_refresh);
+Plymouth.SetKeyboardInputFunction(on_key);
+Plymouth.SetBootProgressFunction(on_boot_progress);
+Plymouth.SetDisplayMessageFunction(on_message);
+Plymouth.SetUpdateStatusFunction(on_status);
+Plymouth.SetQuitFunction(on_quit);
