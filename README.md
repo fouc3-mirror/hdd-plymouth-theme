@@ -9,6 +9,8 @@
 
 > **开发方式**：本项目全程使用 **DSH（DeepSeek Harness）** AI Agent 开发 —— 包括 plymouth 26 script API 的源码核对、帧序列生成、主题脚本编写，以及离线校验器（用 plymouth 自带解析器 + stub 运行时验证脚本逻辑）。
 >
+> **素材来源**：示例动画来自 B 站 UP 主 **露露luki_yo** 的《我把绝区零HDD开屏动画做进了Windows开机！》，**已获作者授权**改编并分享（授权聊天记录见 [`docs/source-authorization.png`](docs/source-authorization.png)，详见第 11 节）。
+>
 > **仓库不含**源视频和生成好的帧序列（分别是 113MB / 86MB 的素材与生成物，见 `.gitignore`）：
 > 你需要自己准备一个 mp4 放进 `src/`，再用 `extract-frames.sh` 生成帧。因此**克隆下来不能直接装**，先看第 2 节。
 
@@ -30,6 +32,8 @@ hdd-plymouth-theme/
 ├── optional/
 │   ├── plymouth-quit-wait.conf       # 可选：systemd 延迟退出（见第 7 节）
 │   └── plymouth-quit-wait.sh         # 上面的单元调用的脚本（装到 /usr/local/bin）
+├── docs/
+│   └── source-authorization.png      # 原素材作者的授权聊天记录（见第 11 节）
 └── ref/checker/                      # 离线校验工具（plymouth 解析器 + stub 运行时）
 ```
 
@@ -235,4 +239,28 @@ sudo grub-mkconfig -o /boot/grub/grub.cfg
 sudo mkinitcpio -P
 # 主题本身: sudo ./install.sh --uninstall
 ```
+
+## 11. 素材来源与授权
+
+本仓库的主题素材（用于抽帧的动画视频）**不是原创**，来源与授权如下：
+
+| 项 | 内容 |
+|---|---|
+| 原视频 | [《我把绝区零HDD开屏动画做进了Windows开机！》](https://www.bilibili.com/video/BV1f7tC6oEm7)（BV1f7tC6oEm7） |
+| 原作者 | B 站 UP 主 **露露luki_yo** —— [个人空间](https://space.bilibili.com/3537104783018790) |
+| 授权凭证 | [`docs/source-authorization.png`](docs/source-authorization.png)（2026-09-08 与作者的聊天记录） |
+
+**授权内容**（据聊天记录）：作者同意把该动画做成 Arch Linux 的开机画面，发布到 AUR 与 GitHub 免费分享给其他 Linux 用户；
+并同意对动画文件「稍作修改（比如转成图片序列）」以适配 Linux，由改编方自行下载视频转换。
+条件是**注明原作者并附上原视频的 B 站链接**。
+
+**因此**：
+
+- 本仓库**不分发**原始视频，也不包含转换后的帧序列（见 `.gitignore`）；使用者需自备素材。
+- 任何人基于本仓库再分发时，请保留本节署名与原视频链接，并自行确认授权范围。
+- 原视频是把游戏《绝区零》的 HDD 开屏动画做成 Windows 开机动画；游戏素材的相关权利归原权利方，本项目以非营利方式分享。
+- 若原作者或相关权利人提出异议，会移除相关内容。
+
+> 代码部分（主题脚本、抽帧/安装脚本、校验器）为原创，可自由取用；仓库暂未附 LICENSE 文件。
+
 
