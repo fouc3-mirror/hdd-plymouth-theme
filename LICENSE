@@ -19,12 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-================================================================================
-
-注意：上述 MIT 许可仅适用于本仓库的代码（主题脚本、抽帧/安装脚本、校验器）。
-
-以下素材不在 MIT 许可范围内，版权归原作者所有，详见 README 的「素材来源与授权」：
-  - src/                        源视频
-  - theme/hdd-boot/frames/      由源视频转换得到的帧序列图片
-  - docs/source-authorization.png、docs/preview.png

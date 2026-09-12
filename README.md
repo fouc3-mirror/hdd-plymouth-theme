@@ -24,6 +24,7 @@ hdd-plymouth-theme/
 ├── install.sh                        # 安装 / 卸载脚本
 ├── extract-frames.sh                 # mp4 → PNG 帧序列（自动同步 TOTAL_FRAMES）
 ├── LICENSE                           # MIT（仅代码）
+├── NOTICE.md                         # 素材声明（非 MIT）
 ├── src/                              # 源视频
 │   ├── HDD开机动画1.mp4               # 9.07s  ← 主题用的这个
 │   └── 拓展版HDD开机动画1.mp4          # 14.53s
@@ -196,7 +197,7 @@ sudo plymouthd --debug --debug-file=/tmp/plymouth-debug.log --no-daemon --mode=b
 | 范围 | 协议 |
 |---|---|
 | **代码**：主题脚本、`install.sh`、`extract-frames.sh`、`optional/`、`ref/checker/` | **MIT**，见 [`LICENSE`](LICENSE) |
-| **素材**：`src/` 的源视频、`theme/hdd-boot/frames/` 的帧序列、`docs/` 里的图片 | **非 MIT**，版权归原作者 **露露luki_yo** 所有，见下节 |
+| **素材**：`src/` 的源视频、`theme/hdd-boot/frames/` 的帧序列、`docs/` 里的图片 | **非 MIT**，版权归原作者 **露露luki_yo** 所有，见 [`NOTICE.md`](NOTICE.md) |
 
 素材不在 MIT 许可范围内。基于素材的再分发请**保留原作者署名并附上原视频链接**；
 商业用途请自行联系原作者。
