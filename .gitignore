@@ -1,16 +1,4 @@
-# ---- 生成物 / 大文件（不进仓库，用工具重新生成） ----
-# 抽帧产物：86MB，且可由 extract-frames.sh 完整重现
-theme/hdd-boot/frames/*.png
-!theme/hdd-boot/frames/.gitkeep
-
-# 源视频：113MB，非本项目原创素材，不随仓库分发
-src/*.mp4
-src/*.MP4
-src/*.mkv
-src/*.webm
-
-# ---- 离线校验器的编译产物 ----
-# （README 里的 ref/checker/check 与 run 是预编译好的，如需重新编译见 ref/checker/build.sh）
+# ---- 校验器编译产物与临时克隆 ----
 ref/checker/*.o
 ref/checker/plymouth-src/
 
@@ -25,6 +13,6 @@ Thumbs.db
 *.bak-*
 *.log
 
-# ---- 安装/调试过程产物 ----
+# ---- 调试产物 ----
 plymouth-debug.log
 *.img
